@@ -1,24 +1,41 @@
 #!/usr/bin/env python3
-"""Disk scheduling: FCFS, SSTF, SCAN, C-SCAN."""
-import sys
-def fcfs(requests,head): return list(requests)
-def sstf(requests,head):
-    order=[]; remaining=list(requests); pos=head
+"""Disk scheduling algorithms (FCFS, SSTF, SCAN, C-SCAN) — zero-dep."""
+
+def fcfs(requests, head):
+    total=0; pos=head; order=[]
+    for r in requests: total+=abs(r-pos); order.append(r); pos=r
+    return total, order
+
+def sstf(requests, head):
+    total=0; pos=head; remaining=list(requests); order=[]
     while remaining:
         nearest=min(remaining,key=lambda r:abs(r-pos))
-        order.append(nearest); remaining.remove(nearest); pos=nearest
-    return order
-def scan(requests,head,direction=1,max_cyl=199):
-    left=[r for r in requests if r<head]; right=[r for r in requests if r>=head]
-    if direction==1: return sorted(right)+sorted(left,reverse=True)
-    else: return sorted(left,reverse=True)+sorted(right)
-def total_seek(order,head):
-    total=0; pos=head
-    for r in order: total+=abs(r-pos); pos=r
-    return total
-requests=[98,183,37,122,14,124,65,67]
-head=int(sys.argv[1]) if len(sys.argv)>1 else 53
-print(f"Requests: {requests}, Head: {head}\n")
-for name,fn in [('FCFS',fcfs),('SSTF',sstf),('SCAN',scan)]:
-    order=fn(requests,head); seek=total_seek(order,head)
-    print(f"  {name:5s}: seek={seek:4d}, order={order}")
+        total+=abs(nearest-pos); pos=nearest; order.append(nearest); remaining.remove(nearest)
+    return total, order
+
+def scan(requests, head, max_cyl=199):
+    total=0; pos=head; order=[]
+    left=sorted([r for r in requests if r<head],reverse=True)
+    right=sorted([r for r in requests if r>=head])
+    for r in right: total+=abs(r-pos); pos=r; order.append(r)
+    if right: total+=abs(max_cyl-pos); pos=max_cyl
+    for r in left: total+=abs(r-pos); pos=r; order.append(r)
+    return total, order
+
+def cscan(requests, head, max_cyl=199):
+    total=0; pos=head; order=[]
+    right=sorted([r for r in requests if r>=head])
+    left=sorted([r for r in requests if r<head])
+    for r in right: total+=abs(r-pos); pos=r; order.append(r)
+    if left:
+        total+=abs(max_cyl-pos)+max_cyl; pos=0
+        for r in left: total+=abs(r-pos); pos=r; order.append(r)
+    return total, order
+
+if __name__=="__main__":
+    requests=[98,183,37,122,14,124,65,67]
+    head=53
+    print(f"Requests: {requests}, Head: {head}")
+    for name,fn in [("FCFS",fcfs),("SSTF",sstf),("SCAN",scan),("C-SCAN",cscan)]:
+        total,order=fn(requests,head)
+        print(f"  {name:>6}: total={total:>3} moves, order={order}")
