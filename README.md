@@ -1,6 +1,6 @@
 # disk-sched
 
-Disk scheduling algorithms (FCFS, SSTF, SCAN).
+Disk scheduling algorithm simulation (FCFS, SSTF, SCAN, C-SCAN).
 
 Zero dependencies. Python 3.8+.
 
